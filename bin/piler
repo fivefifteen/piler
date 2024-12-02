@@ -1,0 +1,100 @@
+#!/usr/bin/env php
+<?php
+$version = '0.0.1';
+
+if (file_exists(__DIR__ . '/../../../autoload.php')) {
+  require_once(__DIR__ . '/../../../autoload.php');
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+  require_once(__DIR__ . '/../vendor/autoload.php');
+}
+
+use \Ahc\Cli\Application;
+use \Ahc\Cli\Output\Color;
+use \Ahc\Cli\Output\Writer;
+
+$app = new Application('Piler', $version);
+
+$black = Color::BLACK;
+$white = Color::WHITE;
+$deepskyblue1 = Color::fg256(39);
+$darkturquoise = Color::fg256(44);
+$turquoise2 = Color::fg256(45);
+$green1 = Color::fg256(46);
+$mediumspringgreen = Color::fg256(49);
+$cyan2 = Color::fg256(50);
+$cyan1 = Color::fg256(51);
+$yellow2 = Color::fg256(190);
+$red1 = Color::fg256(196);
+$gold1 = Color::fg256(220);
+$grey58 = Color::fg256(246);
+$grey74 = Color::fg256(250);
+
+$action_colors = array(
+  'compiling' => $yellow2,
+  'importing' => $mediumspringgreen,
+  'loading'   => $deepskyblue1,
+  'saving'    => $green1
+);
+
+$action_styles = array(
+  'prefix'  => -1,
+  'label'   => 0,
+  'subject' => $grey58
+);
+
+foreach($action_colors as $action => $action_color) {
+  foreach($action_styles as $action_style => $color) {
+    Color::style("action_{$action_style}_{$action}", array(
+      'fg' => $color === -1 ? $action_color : $color
+    ));
+  }
+}
+
+Color::style('action_suffix', array('fg' => 0));
+Color::style('message', array('fg' => 0));
+Color::style('subject', array('fg' => $grey58));
+Color::style('time', array('fg' => $grey58));
+
+Color::style('choice', array('fg' => $red1));
+Color::style('error', array('fg' => $red1, 'bold' => true));
+Color::style('help_category', array('fg' => $deepskyblue1, 'bold' => true));
+Color::style('help_description_even', array('fg' => $grey58));
+Color::style('help_description_odd', array('fg' => $grey74));
+Color::style('help_example', array('fg' => $cyan1));
+Color::style('help_footer', array('fg' => $cyan1));
+Color::style('help_summary', array('fg' => $grey58));
+Color::style('info', array('fg' => 0));
+Color::style('question', array('fg' => 0));
+Color::style('warn', array('fg' => $gold1, 'bold' => true));
+
+Color::style('logo1', array('fg' => $cyan2));
+Color::style('logo2', array('fg' => $cyan1));
+Color::style('logo3', array('fg' => $darkturquoise));
+Color::style('logo4', array('fg' => $turquoise2));
+Color::style('url', array('fg' => $deepskyblue1));
+Color::style('five', array('bg' => $black, 'fg' => $white));
+Color::style('fifteen', array('bg' => $white, 'fg' => $black));
+Color::style('fifteenwebsite', array('fg' => $grey74));
+
+$logo =  '<logo1>' . "        ___  _  _    ___  ___         " . "</end>\n";
+$logo .= '<logo2>' . "       | . \| || |  | __>| . \        " . "</end>\n";
+$logo .= '<logo3>' . "       |  _/| || |_ | _> |   /        " . "</end>\n";
+$logo .= '<logo4>' . "       |_|  |_||___||___>|_\_\        " . "</end>\n";
+$logo .= "\n";
+$logo .= '<url>'   . " https://github.com/fivefifteen/piler " . "</end>\n";
+$logo .= "\n";
+$logo .= "         A <five>FIVE</end><fifteen>FIFTEEN</end> Project\n";
+$logo .= "        <fifteenwebsite>https://fivefifteen.com</end>\n";
+
+$writer = new Writer;
+$colorizer = $writer->colorizer();
+
+$app->onException(function(Throwable $e, int $exitCode) use($writer) {
+  $writer->colors("<error>Error</end> <message>{$e->getMessage()}</end>", true);
+  exit($exitCode);
+});
+
+$app->logo($colorizer->colors($logo));
+$app->add(new Piler\Compile, '', true);
+$app->handle($_SERVER['argv']);
+?>

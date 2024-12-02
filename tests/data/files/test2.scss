@@ -1,0 +1,8 @@
+@import 'test';
+
+.container {
+  p {
+    color: green;
+    @extend .text-white;
+  }
+}
