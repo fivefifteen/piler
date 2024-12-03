@@ -178,7 +178,7 @@ piler -W # same as above
 
 ## Related Projects
 
- - [piler](https://github.com/fivefifteen/piler) - A package manager written in PHP that supports installing dependencies from GitHub, npm, custom URLs, and local file paths. 🐶
+ - [Fetcher](https://github.com/fivefifteen/fetcher) - A package manager written in PHP that supports installing dependencies from GitHub, npm, custom URLs, and local file paths. 🐶
 
 
 ## License Information
