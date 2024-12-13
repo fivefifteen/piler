@@ -1,6 +1,6 @@
 {
   "name": "fivefifteen/piler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A CLI tool written in PHP that compiles and minifies JavaScript and CSS/SCSS files.",
   "authors": [
     {
