@@ -68,7 +68,7 @@ piler [options...] [input...]
  - `[-e|--event-source]` - Server accessible path to point EventSource to for hot-reloading (JS required)
  - `[-h|--help]` - Show help
  - `[-i|--ignore-errors]` - Ignore any errors that may occur and continue processing as much as possible
- - `[-p|--import-path...]` - Additional directory path(s) to import from (SCSS only)
+ - `[-p|--import-path...]` - Additional directory path(s) to import from
  - `[-m|--no-minify]` - Minfy files [default: `true`]
  - `[-o|--output...]` - The directory path(s) or filename(s) to write to
  - `[-q|--quiet]` - Run but don't output anything in the terminal

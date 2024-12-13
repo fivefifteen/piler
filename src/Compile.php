@@ -19,7 +19,7 @@ class Compile extends \Ahc\Cli\Input\Command {
     'event_source'      => null,
     'input'             => null,
     'ignore_errors'     => false,
-    'import_paths'      => null,
+    'import_paths'      => array(),
     'minify'            => true,
     'output'            => null,
     'quiet'             => false,
@@ -45,7 +45,7 @@ class Compile extends \Ahc\Cli\Input\Command {
       ->option('-d --dry-run', 'Don\'t actually write anything so that you can test the command')
       ->option('-e --event-source', 'Server accessible path to point EventSource to for hot-reloading')
       ->option('-i --ignore-errors', 'Ignore any errors that may occur and continue processing as much as possible')
-      ->option('-p --import-path [paths...]', 'Additional directory path(s) to import from (SCSS only)')
+      ->option('-p --import-path [paths...]', 'Additional directory path(s) to import from')
       ->option('-m --no-minify', 'Minfy files')
       ->option('-o --output [paths...]', 'The directory path(s) or filename(s) to write to')
       ->option('-q --quiet', 'Run but don\'t output anything in the terminal')
@@ -94,6 +94,11 @@ class Compile extends \Ahc\Cli\Input\Command {
     $watching = $this->watching;
     $writer = new Writer();
 
+    $import_paths = array_filter(array_unique(array_map('realpath', array_merge(
+      $import_paths ?: array(),
+      array(getcwd())
+    ))));
+
     $this->debug = $debug;
 
     $this->log('args', $args);
@@ -106,7 +111,7 @@ class Compile extends \Ahc\Cli\Input\Command {
           $input_entry = Format::build_path($working_directory, $input_entry);
         }
 
-        $potential_files = self::validate_input_entry($input_entry, compact('quiet', 'ignore_errors', 'verbosity', 'debug'));
+        $potential_files = self::validate_input_entry($input_entry, compact('quiet', 'ignore_errors', 'import_paths', 'verbosity', 'debug'));
 
         if (!$potential_files) {
           continue;
@@ -116,7 +121,7 @@ class Compile extends \Ahc\Cli\Input\Command {
       }
 
       if ($confirmed_files) {
-        $file_groups = self::assign_inputs_to_outputs($confirmed_files, $output, compact('quiet', 'ignore_errors', 'minify', 'verbosity', 'debug'));
+        $file_groups = self::assign_inputs_to_outputs($confirmed_files, $output, compact('quiet', 'ignore_errors', 'import_paths', 'minify', 'verbosity', 'debug'));
       }
     } else {
       if ($working_directory && !str_starts_with($config_path, $working_directory)) {
@@ -133,6 +138,10 @@ class Compile extends \Ahc\Cli\Input\Command {
       }
 
       if ($config_json) {
+        if (($config_dir = realpath(dirname($config_path))) && !in_array($config_dir, $import_paths)) {
+          $import_paths[] = $config_dir;
+        }
+
         if (isset($config_json['piler'])) {
           $config = $config_json['piler'];
         } elseif (isset($config_json['extra']) && isset($config_json['extra']['piler'])) {
@@ -163,7 +172,7 @@ class Compile extends \Ahc\Cli\Input\Command {
 
     $this->log('file_groups pre-validation', $file_groups);
 
-    $file_groups = self::validate_file_groups($file_groups, compact('quiet', 'ignore_errors', 'verbosity', 'working_directory', 'debug'));
+    $file_groups = self::validate_file_groups($file_groups, compact('quiet', 'ignore_errors', 'import_paths', 'verbosity', 'working_directory', 'debug'));
 
     $this->log('file_groups pre-parsing', $file_groups);
 
@@ -316,6 +325,7 @@ class Compile extends \Ahc\Cli\Input\Command {
     extract(array_merge(Format::arr_values(self::$defaults, array(
       'quiet',
       'ignore_errors',
+      'import_paths',
       'minify',
       'verbosity',
       'debug'
@@ -323,9 +333,9 @@ class Compile extends \Ahc\Cli\Input\Command {
 
     $this->debug = $debug;
 
-    $input = array_reduce($input, function ($input_entries, $input_entry) use($quiet, $ignore_errors, $verbosity) {
+    $input = array_reduce($input, function ($input_entries, $input_entry) use($quiet, $ignore_errors, $import_paths, $verbosity) {
       if (Format::is_glob($input_entry)) {
-        $validated_entries = self::validate_input_entry($input_entry, compact('quiet', 'ignore_errors', 'verbosity'));
+        $validated_entries = self::validate_input_entry($input_entry, compact('quiet', 'ignore_errors', 'import_paths', 'verbosity'));
         $input_entries = array_merge($input_entries, $validated_entries);
       } else {
         $input_entries[] = $input_entry;
@@ -609,6 +619,7 @@ class Compile extends \Ahc\Cli\Input\Command {
     extract(array_merge(Format::arr_values(self::$defaults, array(
       'quiet',
       'ignore_errors',
+      'import_paths',
       'verbosity',
       'working_directory',
       'debug'
@@ -641,7 +652,7 @@ class Compile extends \Ahc\Cli\Input\Command {
           $group_input_file = Format::build_path($working_directory, $group_input_file);
         }
 
-        $potential_files = self::validate_input_entry($group_input_file, compact('quiet', 'ignore_errors', 'verbosity'));
+        $potential_files = self::validate_input_entry($group_input_file, compact('quiet', 'ignore_errors', 'import_paths', 'verbosity'));
 
         $this->log(compact('group_input', 'group_input_file', 'potential_files'));
 
@@ -687,6 +698,7 @@ class Compile extends \Ahc\Cli\Input\Command {
     extract(array_merge(Format::arr_values(self::$defaults, array(
       'quiet',
       'ignore_errors',
+      'import_paths',
       'verbosity',
       'debug'
     )), $args));
@@ -696,7 +708,17 @@ class Compile extends \Ahc\Cli\Input\Command {
     $writer = new Writer();
 
     if (is_dir($input_entry)) {
-      $directory_files = glob("{$input_entry}/*.{" . implode(',', self::$supported_extensions) . "}", GLOB_BRACE);
+      foreach(array_merge(array(''), $import_paths) as $import_path) {
+        $glob_str = "{$input_entry}/*.{" . implode(',', self::$supported_extensions) . "}";
+
+        if ($import_path) {
+          $glob_str = "{$import_path}/{$glob_str}";
+        }
+
+        if ($directory_files = glob($glob_str, GLOB_BRACE)) {
+          break;
+        }
+      }
 
       if ($directory_files) {
         return $directory_files;
@@ -728,7 +750,18 @@ class Compile extends \Ahc\Cli\Input\Command {
         }
       }
     } else {
-      $potential_files = glob($input_entry, GLOB_BRACE);
+      foreach(array_merge(array(''), $import_paths) as $import_path) {
+        $glob_str = $input_entry;
+
+        if ($import_path) {
+          $glob_str = "{$import_path}/{$glob_str}";
+        }
+
+        if ($potential_files = glob($glob_str, GLOB_BRACE)) {
+          break;
+        }
+      }
+
       $valid_potential_files = array();
 
       foreach($potential_files as $potential_file) {
