@@ -128,8 +128,14 @@ class Compile extends \Ahc\Cli\Input\Command {
         $config_path = Format::build_path($working_directory, $config_path);
       }
 
+      $config_json = false;
       $is_default_check = basename($config_path) === 'pile.json';
       $alt_config_path = Format::build_path(dirname($config_path), 'composer.json');
+
+      $this->log(array_merge(compact('config_path', 'alt_config_path', 'is_default_check'), array(
+        'config_path_exists' => $this->debug ? file_exists($config_path) : null,
+        'alt_config_path_exists' => $this->debug ? file_exists($alt_config_path) : null
+      )));
 
       if (file_exists($config_path)) {
         $config_json = File::get_json($config_path);
