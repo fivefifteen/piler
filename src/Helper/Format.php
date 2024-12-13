@@ -16,7 +16,11 @@ class Format {
     $parts = array();
 
     array_walk_recursive($path_parts, function($part) use(&$parts) {
-      $parts[] = trim($part, DIRECTORY_SEPARATOR);
+      if ($part) {
+        $trim = 'trim';
+        if (!$parts) $trim = 'rtrim';
+        $parts[] = $trim($part, DIRECTORY_SEPARATOR);
+      }
     });
 
     return implode(DIRECTORY_SEPARATOR, $parts);

@@ -95,8 +95,8 @@ class Compile extends \Ahc\Cli\Input\Command {
     $writer = new Writer();
 
     $import_paths = array_filter(array_unique(array_merge(
-      array_map('realpath', $import_paths),
-      array(getcwd(), getcwd() . '/fetched')
+      $import_paths,
+      array($working_directory, Format::build_path($working_directory, 'fetched'))
     )));
 
     $this->debug = $debug;
@@ -128,6 +128,7 @@ class Compile extends \Ahc\Cli\Input\Command {
         $config_path = Format::build_path($working_directory, $config_path);
       }
 
+      $is_default_check = basename($config_path) === 'pile.json';
       $alt_config_path = Format::build_path(dirname($config_path), 'composer.json');
 
       if (file_exists($config_path)) {
@@ -138,12 +139,12 @@ class Compile extends \Ahc\Cli\Input\Command {
       }
 
       if ($config_json) {
-        if (($config_dir = realpath(dirname($config_path)))) {
+        if (($config_dir = dirname($config_path))) {
           if (!in_array($config_dir, $import_paths)) {
             $import_paths[] = $config_dir;
           }
 
-          $fetched_dir = $config_dir . '/fetched';
+          $fetched_dir = Format::build_path($config_dir, 'fetched');
 
           if (!in_array($fetched_dir, $import_paths)) {
             $import_paths[] = $fetched_dir;
@@ -762,6 +763,12 @@ class Compile extends \Ahc\Cli\Input\Command {
         $glob_str = $input_entry;
 
         if ($import_path) {
+          $import_path_dir = dirname($import_path);
+
+          if (str_starts_with($input_entry, $import_path_dir)) {
+            $glob_str = substr($glob_str, strlen($import_path_dir) + 1);
+          }
+
           $glob_str = "{$import_path}/{$glob_str}";
         }
 
