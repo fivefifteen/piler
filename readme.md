@@ -141,7 +141,7 @@ While Piler can be used out of the box without any configuration, a config file 
     "compile": {
       "style.css": "scss/style.scss",
       "js/scripts.min.js": [
-        "fetched/bluzky/nice-select2/dist/js/nice-select2.js",
+        "bluzky/nice-select2/dist/js/nice-select2.js",
         "js/src/*.js"
       ]
     }
@@ -176,7 +176,7 @@ Piler also supports loading configuration options from a `composer.json` file, e
       "compile": {
         "style.css": "scss/style.scss",
         "js/scripts.min.js": [
-          "fetched/bluzky/nice-select2/dist/js/nice-select2.js",
+          "bluzky/nice-select2/dist/js/nice-select2.js",
           "js/src/*.js"
         ]
       }
