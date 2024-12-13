@@ -94,10 +94,10 @@ class Compile extends \Ahc\Cli\Input\Command {
     $watching = $this->watching;
     $writer = new Writer();
 
-    $import_paths = array_filter(array_unique(array_map('realpath', array_merge(
-      $import_paths ?: array(),
-      array(getcwd())
-    ))));
+    $import_paths = array_filter(array_unique(array_merge(
+      array_map('realpath', $import_paths),
+      array(getcwd(), getcwd() . '/fetched')
+    )));
 
     $this->debug = $debug;
 
@@ -138,8 +138,16 @@ class Compile extends \Ahc\Cli\Input\Command {
       }
 
       if ($config_json) {
-        if (($config_dir = realpath(dirname($config_path))) && !in_array($config_dir, $import_paths)) {
-          $import_paths[] = $config_dir;
+        if (($config_dir = realpath(dirname($config_path)))) {
+          if (!in_array($config_dir, $import_paths)) {
+            $import_paths[] = $config_dir;
+          }
+
+          $fetched_dir = $config_dir . '/fetched';
+
+          if (!in_array($fetched_dir, $import_paths)) {
+            $import_paths[] = $fetched_dir;
+          }
         }
 
         if (isset($config_json['piler'])) {
