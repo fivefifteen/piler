@@ -123,22 +123,41 @@ class Compile extends \Ahc\Cli\Input\Command {
         $config_path = Format::build_path($working_directory, $config_path);
       }
 
-      $config = File::get_json($config_path);
+      $alt_config_path = Format::build_path(dirname($config_path), 'composer.json');
 
-      if ($config && isset($config['compile'])) {
+      if (file_exists($config_path)) {
+        $config_json = File::get_json($config_path);
+      } elseif ($is_default_check && file_exists($alt_config_path)) {
+        $config_json = File::get_json($alt_config_path);
+        $config_path = $alt_config_path;
+      }
+
+      if ($config_json) {
+        if (isset($config_json['piler'])) {
+          $config = $config_json['piler'];
+        } elseif (isset($config_json['extra']) && isset($config_json['extra']['piler'])) {
+          $config = $config_json['extra']['piler'];
+        }
+      }
+
+      if ($config) {
         if (!$quiet) {
           $writer->colors("<info>Loaded</end> <subject>{$config_path}</end>", true);
         }
 
-        $file_groups = $config['compile'];
+        if (isset($config['compile'])) {
+          $file_groups = $config['compile'];
+        }
 
-        if (isset($config['settings']) && isset($config['settings']['piler'])) {
-          $settings = $config['settings']['piler'];
+        if (isset($config['config'])) {
+          $imported_config = $config['config'];
 
-          foreach($settings as $setting => $value) {
-            ${$setting} = $value;
+          foreach($imported_config as $config_key => $config_value) {
+            ${$config_key} = $config_value;
           }
         }
+      } else {
+        throw new \Error("A config file was found but it didn't have any valid data for Piler");
       }
     }
 
@@ -245,16 +264,20 @@ class Compile extends \Ahc\Cli\Input\Command {
     if ($save_changes && !$this->errors) {
       if ($config && isset($config['compile'])) {
         $config['compile'] = array_merge_recursive($config['compile'], $file_groups);
+        $config_json = File::get_json($config_path) ?: array();
       } else {
         $config['compile'] = $file_groups;
+        $config_json = array();
       }
+
+      $config_json['piler'] = $config;
 
       $writer->colors(($dry_run ? '*' : null) . "<info>Updating</end> <subject>{$config_path}</end>...", true);
 
       if ($dry_run) {
         $config_bytes_written = true;
       } else {
-        $config_bytes_written = file_put_contents($config_path, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $config_bytes_written = file_put_contents($config_path, json_encode($config_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
       }
 
       if (!$config_bytes_written) {

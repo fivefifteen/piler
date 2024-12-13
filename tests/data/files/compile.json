@@ -1,13 +1,15 @@
 {
-  "compile": {
-    "test-compiled.css": "test.css",
-    "styles-compiled.css": [
-      "test2.scss",
-      "only-styles"
-    ],
-    "scripts-compiled.js": [
-      "test.js",
-      "only-scripts"
-    ]
+  "piler": {
+    "compile": {
+      "test-compiled.css": "test.css",
+      "styles-compiled.css": [
+        "test2.scss",
+        "only-styles"
+      ],
+      "scripts-compiled.js": [
+        "test.js",
+        "only-scripts"
+      ]
+    }
   }
 }
