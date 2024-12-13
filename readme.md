@@ -24,6 +24,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+    - [Configuration via Composer](#configuration-via-composer)
     - [Hot-Reloading](#hot-reloading)
 - [Related Projects](#related-projects)
 - [License Information](#license-information)
@@ -129,24 +130,61 @@ While Piler can be used out of the box without any configuration, a config file 
 
 ```json
 {
-  "compile": {
-    "style.css": "scss/style.scss",
-    "js/scripts.min.js": [
-      "fetched/bluzky/nice-select2/dist/js/nice-select2.js",
-      "js/src/*.js"
-    ]
-  },
-  "settings": {
-    "piler": {
+  "piler": {
+    "config": {
       "config_path": "compile.json",
       "event_source": "/reloader.php",
       "import_paths": ["fetched"],
       "minify": true,
       "yes_to_overwrite": true
+    },
+    "compile": {
+      "style.css": "scss/style.scss",
+      "js/scripts.min.js": [
+        "fetched/bluzky/nice-select2/dist/js/nice-select2.js",
+        "js/src/*.js"
+      ]
     }
   }
 }
 ```
+
+
+### Configuration via Composer
+
+Piler also supports loading configuration options from a `composer.json` file, except for in this case Piler checks for it's key under the `extra` section like so:
+
+```json
+{
+  "name": "username/package",
+  "version": "0.0.1",
+  "require-dev": {
+    "fivefifteen/piler": "*"
+  },
+  "scripts": {
+    "build": "./vendor/bin/piler -y"
+  },
+  "extra": {
+    "piler": {
+      "config": {
+        "config_path": "compile.json",
+        "event_source": "/reloader.php",
+        "import_paths": ["fetched"],
+        "minify": true,
+        "yes_to_overwrite": true
+      },
+      "compile": {
+        "style.css": "scss/style.scss",
+        "js/scripts.min.js": [
+          "fetched/bluzky/nice-select2/dist/js/nice-select2.js",
+          "js/src/*.js"
+        ]
+      }
+    }
+  }
+}
+```
+
 
 ### Hot-Reloading
 
