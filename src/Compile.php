@@ -33,6 +33,7 @@ class Compile extends \Ahc\Cli\Input\Command {
   public $debug = false;
   public $errors = false;
   public $file_groups = array();
+  public $file_list = array();
   public $watching = false;
 
   public function __construct() {
@@ -223,6 +224,8 @@ class Compile extends \Ahc\Cli\Input\Command {
         $input = file_get_contents($input_file);
         $processed_input = $input_handler->process_input($input, $input_file);
         $output .= $processed_input;
+
+        $this->file_list = array_merge($this->file_list, array($input_file), $input_handler->imported_files);
       }
 
       if (!$quiet) {
@@ -837,7 +840,7 @@ class Compile extends \Ahc\Cli\Input\Command {
 
       clearstatcache();
 
-      $watch_files = Format::array_flatten($this->file_groups);
+      $watch_files = $this->file_list;
 
       foreach($watch_files as $watch_file) {
         $last_modified = filemtime($watch_file);

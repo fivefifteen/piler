@@ -8,6 +8,7 @@ use \ScssPhp\ScssPhp\Compiler;
 class ScssHandler extends Handler {
   public $ignore_errors = false;
   public $import_paths = array();
+  public $imported_files = array();
   public $quiet = false;
 
   public function __construct($import_paths = array(), $args = array()) {
@@ -24,9 +25,8 @@ class ScssHandler extends Handler {
     $ignore_errors = $this->ignore_errors;
     $import_paths = $this->import_paths;
     $quiet = $this->quiet;
-    $input_files = array();
 
-    $compiler->addImportPath(function($path) use($ignore_errors, $import_paths, &$input_files, $quiet, $writer) {
+    $compiler->addImportPath(function($path) use($ignore_errors, $import_paths, $quiet, $writer) {
       $new_path = null;
 
       if (Compiler::isCssImport($path)) {
@@ -65,8 +65,8 @@ class ScssHandler extends Handler {
           Format::write_action($writer, 'importing', $new_path);
         }
 
-        if (!in_array($new_path, $input_files)) {
-          $input_files[] = $new_path;
+        if (!in_array($new_path, $this->imported_files)) {
+          $this->imported_files[] = $new_path;
         }
 
         return $new_path;

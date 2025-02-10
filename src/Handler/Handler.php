@@ -6,6 +6,8 @@ use \Piler\Handler\JsHandler;
 use \Piler\Handler\ScssHandler;
 
 abstract class Handler {
+  public $imported_files = array();
+
   abstract protected function process_input(string $input, string $input_file);
   abstract protected function process_output(string $output, string $output_file);
 
