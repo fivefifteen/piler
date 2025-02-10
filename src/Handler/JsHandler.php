@@ -21,17 +21,16 @@ class JsHandler extends Handler {
   public function process_output($output, $output_file) {
     if ($this->watching && $this->event_source) {
       $output = "// Piler Hot-Reload Script
-if (window.pilerHotReloader) {
-  window.pilerHotReloaderFiles.push('{$output_file}')
-} else {
+if (!window.pilerHotReloader) {
   window.pilerHotReloader = new EventSource('{$this->event_source}')
-  window.pilerHotReloaderFiles = ['{$output_file}']
+
+  console.log('[Piler] Listening for reload instructions from {$this->event_source}')
 
   pilerHotReloader.addEventListener('message', function (e) {
     if (e.data) {
       try {
         var data = JSON.parse(e.data)
-        if (data && data.output && window.pilerHotReloaderFiles.includes(data.output)) {
+        if (data && data.action && data.action == 'reload') {
           console.log('[Piler] Change detected. Refreshing page...', data)
           location.reload()
         }
