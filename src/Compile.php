@@ -143,6 +143,14 @@ class Compile extends \Ahc\Cli\Input\Command {
       } elseif ($is_default_check && file_exists($alt_config_path)) {
         $config_json = File::get_json($alt_config_path);
         $config_path = $alt_config_path;
+      } else {
+        $err_msg = "No config file was found at {$config_path}";
+
+        if ($is_default_check) {
+          $err_msg .= " or {$alt_config_path}";
+        }
+
+        throw new \Error($err_msg);
       }
 
       if ($config_json) {
