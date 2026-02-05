@@ -48,7 +48,7 @@
     "scssphp/scssphp": "^1.13"
   },
   "require-dev": {
-    "phpunit/phpunit": "^10.5"
+    "phpunit/phpunit": "^10.5.62"
   },
   "scripts": {
     "test": "vendor/bin/phpunit tests --display-warnings --"
