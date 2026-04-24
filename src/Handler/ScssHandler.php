@@ -61,6 +61,8 @@ class ScssHandler extends Handler {
       }
 
       if ($new_path) {
+        $new_path = realpath($new_path) ?: $new_path;
+
         if (!$quiet) {
           Format::write_action($writer, 'importing', $new_path);
         }
