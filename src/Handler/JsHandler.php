@@ -15,7 +15,7 @@ class JsHandler extends Handler {
   }
 
   public function process_input($input, $input_file) {
-    return $input;
+    return rtrim($input) . "\n;\n";
   }
 
   public function process_output($output, $output_file) {

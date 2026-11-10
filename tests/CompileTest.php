@@ -202,5 +202,60 @@ class CompileTest extends TestCase {
     $this->assertTrue(is_file($test_file2));
     $this->assertTrue(is_file($test_file3));
   }
+
+  public function testJsStatementBoundary() {
+    $cases = array(
+      'function' => array(
+        'file' => 'starts-with-function.js',
+        'next' => 'function'
+      ),
+      'paren' => array(
+        'file' => 'starts-with-paren.js',
+        'next' => '(function'
+      )
+    );
+
+    $brace = file_get_contents(Format::build_path(self::$test_files, 'join/ends-with-brace.js'));
+    $this->assertIsString($brace);
+    $this->assertStringEndsWith('}', $brace);
+    $this->assertDoesNotMatchRegularExpression("/\n$/", $brace);
+
+    foreach (array(true, false) as $minify) {
+      foreach ($cases as $name => $case) {
+        $path = Format::build_path(self::$playground, 'testJsStatementBoundary-' . ($minify ? 'min' : 'plain') . '-' . $name);
+        $cmd = new Compile();
+
+        self::copyTestFile('join/ends-with-brace.js', $path, 'ends-with-brace.js');
+        self::copyTestFile('join/' . $case['file'], $path, $case['file']);
+
+        $cmd->run(array(
+          'input'             => array(
+            'ends-with-brace.js',
+            $case['file']
+          ),
+          'output'            => array(
+            'bundle.js'
+          ),
+          'minify'            => $minify,
+          'quiet'             => true,
+          'working_directory' => $path,
+          'yes_to_overwrite'  => true
+        ));
+
+        $bundle = Format::build_path($path, 'bundle.js');
+        $this->assertTrue(is_file($bundle));
+
+        $contents = file_get_contents($bundle);
+        $this->assertIsString($contents);
+        $this->assertStringNotContainsString('}' . $case['next'], $contents);
+
+        if ($minify) {
+          $this->assertStringContainsString('};' . $case['next'], $contents);
+        } else {
+          $this->assertStringContainsString("}\n;\n" . $case['next'], $contents);
+        }
+      }
+    }
+  }
 }
 ?>
